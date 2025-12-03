@@ -45,7 +45,7 @@ func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email stri
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	accessToken, err := at.SignedString(jwtSecret)
 	if err != nil {
-		return "", "", fmt.Errorf("gagal menandatangani access token: %w", err)
+		return "", "", fmt.Errorf("failed to sign access token: %w", err)
 	}
 
 	// --- Refresh Token (RT) ---
@@ -64,7 +64,7 @@ func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email stri
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	refreshToken, err := rt.SignedString(jwtSecret)
 	if err != nil {
-		return "", "", fmt.Errorf("gagal menandatangani refresh token: %w", err)
+		return "", "", fmt.Errorf("failed to sign refresh token: %w", err)
 	}
 
 	return accessToken, refreshToken, nil
@@ -75,10 +75,10 @@ func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email stri
 func ValidateAccessToken(tokenString string, jwtSecret []byte) (*AccessClaims, error) {
 	claims := &AccessClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		// Memastikan metode penandatanganan benar
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("metode penandatanganan tak terduga: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unvalid method: %v", token.Header["alg"])
 		}
 		return jwtSecret, nil
 	})
@@ -86,11 +86,11 @@ func ValidateAccessToken(tokenString string, jwtSecret []byte) (*AccessClaims, e
 	if err != nil {
 		// Tangani kesalahan parsing atau validasi
 		// Misalnya: "token is expired" atau "signature is invalid"
-		return nil, fmt.Errorf("access token tidak valid: %w", err)
+		return nil, err
 	}
 
 	if !token.Valid {
-		return nil, errors.New("access token tidak valid")
+		return nil, errors.New("unvalid access token")
 	}
 
 	// Claims sekarang berisi data yang valid
@@ -100,23 +100,20 @@ func ValidateAccessToken(tokenString string, jwtSecret []byte) (*AccessClaims, e
 func ValidateRefreshToken(tokenString string, jwtSecret []byte) (*RefreshClaims, error) {
 	claims := &RefreshClaims{}
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("metode penandatanganan tak terduga: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unvalid method: %v", token.Header["alg"])
 		}
 		return jwtSecret, nil
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("refresh token tidak valid: %w", err)
+		return nil, err
 	}
 
 	if !token.Valid {
-		return nil, errors.New("refresh token tidak valid")
+		return nil, errors.New("unvalid refresh token")
 	}
-
-	// Selain validasi di sini, di sistem yang reliable,
-	// Anda harus MEMERIKSA TokenUUID ini di Redis/Database.
 
 	return claims, nil
 }
