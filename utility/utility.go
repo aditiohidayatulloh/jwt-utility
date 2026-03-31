@@ -32,9 +32,10 @@ func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email stri
 	atExpiresAt := time.Now().Add(time.Minute * time.Duration(expACToken))
 
 	atClaims := AccessClaims{
-		UserID: userID,
-		Email:  email,
-		RoleID: roleID,
+		UserID:           userID,
+		Email:            email,
+		RoleID:           roleID,
+		AzureAccessToken: azureToken,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(atExpiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
