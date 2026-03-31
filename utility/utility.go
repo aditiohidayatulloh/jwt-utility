@@ -10,9 +10,10 @@ import (
 
 // AccessClaims adalah struct untuk Access Token
 type AccessClaims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	RoleID int32  `json:"role_id"`
+	UserID           string `json:"user_id"`
+	Email            string `json:"email"`
+	RoleID           int32  `json:"role_id"`
+	AzureAccessToken string `json:"azure_access_token"`
 	jwt.RegisteredClaims
 }
 
@@ -25,7 +26,7 @@ type RefreshClaims struct {
 
 // GenerateToken membuat token baru berdasarkan data user
 // GenerateTokens menghasilkan Access Token dan Refresh Token baru
-func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email string, jwtSecret []byte) (string, string, error) {
+func GenerateTokens(expACToken, expRFToken int, roleID int32, userID, email string, jwtSecret []byte, azureToken string) (string, string, error) {
 	// --- Access Token (AT) ---
 	// Kedaluwarsa dalam 15 menit
 	atExpiresAt := time.Now().Add(time.Minute * time.Duration(expACToken))
