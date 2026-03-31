@@ -1,4 +1,4 @@
-module github.com/kokolopo/jwt-utility
+module github.com/aditiohidayatulloh/jwt-utility
 
 go 1.25.4
 
